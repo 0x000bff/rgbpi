@@ -71,29 +71,29 @@ class CompositeColor(object):
         self.rgbw = '00000000'
 
 
-class ColorPattern(object):
+class Pattern(object):
     def __init__(self, **kwargs):
         self.color = CompositeColor()
-        self.bpm = float(kwargs.get('bpm', 120))
 
-    def fade(start, end):
-        pass
+    def fade(start, end, bpm):
+        
 
-    def random(self):
+    def random(self, bpm):
         self.color.random()
-        sleep(60/self.bpm)
+        sleep(60.0/bpm)
 
 
-class WorkerThread(threading.Thread):
+class Sequencer(threading.Thread):
     def __init__(self, **kwargs):
-        self.as_super = super(WorkerThread, self)
+        self.as_super = super(Sequencer, self)
         self.as_super.__init__()
         self.stoprequest = threading.Event()
-        self.pattern = kwargs.get('pattern', ColorPattern().random)
+        self.pattern = kwargs.get('pattern', Pattern().random)
+        self.bpm = float(kwargs.get('bpm', 120))
 
     def run(self):
         while not self.stoprequest.isSet():
-            self.pattern()
+            self.pattern(self.bpm)
 
     def join(self, timeout=None):
         self.stoprequest.set()
