@@ -54,13 +54,9 @@ class CompositeColor(object):
     @rgbw.setter
     def rgbw(self, vals):
         colors = [self.red, self.green, self.blue, self.white]
-        vals = str(vals)
-        if vals.startswith('0x'):
-            vals = vals.strip('0x')
-        #from IPython import embed; embed()
-        vals = vals.zfill(8)
+        if type(vals) != list:
+            vals = breakout_rgbw(vals)
         self._rgbw = vals
-        vals = [int(vals[i:i+2], 16) for i in range(0, 8, 2)]
         for color, val in zip(colors, vals):
             color.brightness = val
 
@@ -75,8 +71,14 @@ class Pattern(object):
     def __init__(self, **kwargs):
         self.color = CompositeColor()
 
-    def fade(start, end, bpm):
-        
+    def fade(self, start, end, bpm, length=1):
+        # ff33dd44 --> aa99ee00
+        start = breakout_rgbw(start)
+        end = breakout_rgbw(end)
+        # [255, 51, 221, 68] --> [170, 153, 238, 0]
+        for i in range(0, bpm):
+            self.color.rgbw = [a + i*(b-a)/bpm for a, b in zip(start, end)]
+            sleep(60.0*length/(bpm**2))
 
     def random(self, bpm):
         self.color.random()
@@ -98,6 +100,14 @@ class Sequencer(threading.Thread):
     def join(self, timeout=None):
         self.stoprequest.set()
         self.as_super.join(timeout)
+
+
+def breakout_rgbw(vals):
+    if vals.startswith('0x'):
+        vals = vals.strip('0x')
+    vals = vals.zfill(8)
+    vals = [int(vals[i:i+2], 16) for i in range(0, 8, 2)]
+    return vals
 
 
 def reset():
